@@ -37,6 +37,9 @@ ALTER USER postgres WITH PASSWORD 'postgres';
 
 В файл pg_hba.conf добавим
 
+### Действия наперед
+
+Создание индексов в БД
 
 ### Выбор стека технологий
 
