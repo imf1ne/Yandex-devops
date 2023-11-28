@@ -9,26 +9,58 @@
 
 # Локальное исследование черного ящика
 
+Запуск, конфиги, заполнение БД.
+
+
+Наконец сервер запустился и мы получили первый код.
+Через curl получаем второй.
+
+# Настройка базы данных
+Действия выполняются на ноде 1.
+
+Установка и запуск:
+```bash
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/postgresql-pgdg.list &gt; /dev/null
+sudo apt-get update
+sudo apt-get install postgresql-14 postgresql-contrib
+sudo systemctl start postgresql
+```
+
+Установка пароля пользователю postgres:
+```bash
+sudo -u postgres psql
+ALTER USER postgres WITH PASSWORD 'postgres';
+```
+
+В файл postgesql.conf добавим
+
+В файл pg_hba.conf добавим
 
 
 ### Выбор стека технологий
 
 Проект построен на базе Yandex Cloud.
-С базой данных все понятно. А на чем строить отказоустоичивость и балансировку нагрузки надо решать.
+С базой данных все понятно из исследования bingo. А на чем строить отказоустоичивость и балансировку нагрузки надо решать.
 В качестве ОС я выбрал Ubuntu 20.04.
 А инсталляцию решил развернуть на nginx, и ноды, и сервер балансировки. Итого - 3 машины.
+_Балансер_ - Intel Ice Lake, 2 vCPU, 1Гб RAM
+_Нода 1_ - Intel Ice Lake, 2 vCPU, 2Гб RAM
+_Нода 2_ - Intel Ice Lake, 2 vCPU, 1Гб RAM
 
 # Архитектура проекта
 
+Картинка
 
 
 # Ускорение старта (Патч бинаря)
 
 
 
-# Балансер
+# Настройка балансера
 
 Выбрана версия nginx - 1.25.3. (Можно закрыть пункт с поддержкой http3, так как эта версия его поддерживает)
+
 ```
 sudo apt install curl gnupg2 ca-certificates lsb-release ubuntu-keyring
 curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \
@@ -45,6 +77,7 @@ sudo apt install nginx
 
 Отредактируем конфигурационный файл /etc/nginx/conf.d/default.conf.
 В нем настроен upstream и http3. (Также тут есть ендпоинт status для дальнейшего снятия метрик)
+Итоговая версия конфига
 
 ```
 upstream backend {
@@ -100,7 +133,6 @@ server {
     location / {
        add_header Alt-Svc 'h3=":$server_port"; ma=86400';
        add_header X-protocol $server_protocol always;
-       # include proxy_params;
        proxy_pass http://backend;
        proxy_http_version 1.1;
        proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504 non_idempotent;
@@ -115,7 +147,7 @@ server {
     # Optionally: allow access only from localhost
     # listen 127.0.0.1:8080;
 
-    server_name bingo;
+    server_name bingo.myddns.me;
 
     location /status {
         stub_status;
@@ -124,9 +156,23 @@ server {
 ```
 
 
-# Нода 2
+# Настройка обеих нод, действия дублируются
 
-Запуск bingo как службы:
+Редактирование конфига /opt/bingo/config.yaml
+```
+student_email: my-email@email.ru
+postgres_cluster:
+  hosts:
+  - address: 192.168.10.4  # Адрес ноды 1
+    port: 5432
+  user: postgres
+  password: postgres
+  db_name: postgres
+  ssl_mode: disable
+  use_closest_node: false
+```
+
+#### Запуск bingo как службы (потому что иногда падает)
 
 Создаем файл /etc/systemd/system/bingo.service
 
@@ -139,7 +185,7 @@ After=multi-user.target
 Type=simple
 User=dim
 Restart=always
-RestartSec=2
+RestartSec=5
 WorkingDirectory=/home/dim
 ExecStart=/home/dim/bingo run_server
 
@@ -151,13 +197,18 @@ sudo systemctl daemon-reload
 sudo systemctl enable bingo
 sudo systemctl start bingo
 
-Установка nginx
+### Прикручиваем bingo к nginx
+Возьмем версию nginx, которая устанавливается по умолчанию - 1.18.0, 
+так как в локальной сети нам не обязателен http3,
+общение происходит по http, а доступ наружу закрыт.
 
+sudo apt install nginx
+
+Редактируем файл
 /etc/nginx/sites-available/default
 ```
 server {
     listen 192.168.10.4:80;
-    #listen [::]:80;
     server_name bingo.myddns.me;
     #location / {
     #    return 301 http://$host$request_uri:13176;
@@ -170,27 +221,8 @@ server {
 }
 ```
 
-# Ноды 1
-Аналогично ноде 2.
-Добавляется установка и настройка БД postgesql.
-
-
-## Настройка базы данных
-
-```bash
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/postgresql-pgdg.list &gt; /dev/null
-sudo apt-get update
-sudo apt-get install postgresql-14 postgresql-contrib
-sudo systemctl start postgresql
-```
-
-Установка пароля пользователю postgres:
-```bash
-sudo -u postgres psql
-ALTER USER postgres WITH PASSWORD 'postgres';
-```
-
 
 # Сбор метрик (Prometeus + Grafana)
+
+
 
