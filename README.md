@@ -2,10 +2,9 @@
 Итоговый проект тренировок yandex-devops
 
 
-## ТЗ кратко (полное ТЗ https://docs.yandex.ru/docs/view?url=ya-disk-public%3A%2F%2FaZFzSWnWcEBeFUQaZTVH7mko2C8kWAY5drce3M9qlgYGtAG6xLa0qQ37gSVWb4T4q%2FJ6bpmRyOJonT3VoXnDag%3D%3D&name=%D0%98%D1%82%D0%BE%D0%B3%D0%BE%D0%B2%D1%8B%D0%B9%20%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82.docx&nosw=1):
+## ТЗ кратко ([Полное ТЗ](https://docs.yandex.ru/docs/view?url=ya-disk-public%3A%2F%2FaZFzSWnWcEBeFUQaZTVH7mko2C8kWAY5drce3M9qlgYGtAG6xLa0qQ37gSVWb4T4q%2FJ6bpmRyOJonT3VoXnDag%3D%3D&name=%D0%98%D1%82%D0%BE%D0%B3%D0%BE%D0%B2%D1%8B%D0%B9%20%D0%BF%D1%80%D0%BE%D0%B5%D0%BA%D1%82.docx&nosw=1)):
 Дан бинарный исполняемый файл. Необходимо развернуть отказоустойчивую инсталляцию приложения из имеющегося бинарника до
 даты запуска продукта. Планируется стабильная нагрузка в 60 RPS, пиковая в 120 RPS.
-
 
 
 # Исследование черного ящика
@@ -17,7 +16,8 @@
 
 # Архитектура проекта
 
-# Ускорение старта
+
+# Ускорение старта (Патч бинаря)
 
 
 # Настройка балансера
