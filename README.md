@@ -385,7 +385,7 @@ add_header Alt-Svc 'h3=":443"; ma=3600';
 
 Демонстрация HTTP3:
 
-<center><img src="images/http3.jpg" width="80%"></center>
+<center><img src="images/http3.jpg" width="100%"></center>
 
 
 # Сбор метрик (Exporter + Prometeus + Grafana)
