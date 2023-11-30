@@ -1,0 +1,14 @@
+[Unit]
+Description=bingo
+After=multi-user.target
+
+[Service]
+Type=simple
+User=dim
+Restart=always
+RestartSec=3
+WorkingDirectory=/home/dim
+ExecStart=/home/dim/bingo-ret_http run_server
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=healthchecker
+After=multi-user.target
+
+[Service]
+Type=simple
+User=dim
+Restart=always
+RestartSec=5
+WorkingDirectory=/home/dim
+ExecStart=/bin/bash checker.sh
+
+[Install]
+WantedBy=multi-user.target

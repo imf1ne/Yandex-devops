@@ -1,0 +1,10 @@
+student_email: hidden-mail@mail.ru
+postgres_cluster:
+  hosts:
+  - address: 192.168.10.4
+    port: 5432
+  user: postgres
+  password: postgres
+  db_name: postgres
+  ssl_mode: disable
+  use_closest_node: false

@@ -1,7 +1,7 @@
 # Yandex-devops
 Итоговый проект тренировок yandex-devops
 
-Ссылка на мой проект: https://bingo.myddns.me/
+Ссылка на мой стенд: https://bingo.myddns.me/
 
 ## ТЗ кратко
 Дан бинарный исполняемый файл. Необходимо развернуть отказоустойчивую инсталляцию приложения из имеющегося бинарника до
@@ -166,8 +166,8 @@ sudo apt install nginx
 
 
 На первом этапе были выполнены следующие действия:
-- Создание раздел upstream, который распределяет трафик
-между двумя нодами, добавлены условия, что в случае ошибок, необходимо не отправлять запросы на вышедший из строя сервер.
+- Создание раздела upstream, который распределяет трафик
+между двумя нодами. Добавлены условия, что в случае ошибок, необходимо не отправлять запросы на вышедший из строя сервер.
 - Настройка кэширования (proxy_cache) для /long_dummy
 - Бесплатное получение домена 3-го уровня на сервисе https://www.noip.com/
 - Конфигурирование обработки запросов на портах 80 и 443 с поддержка протокола https на самоподписанном сертификате
@@ -293,6 +293,8 @@ ExecStart=/home/dim/bingo run_server
 WantedBy=multi-user.target
 ```
 
+Запуск:
+
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable bingo
@@ -324,7 +326,7 @@ server {
 
 ```sudo systemctl restart nginx```
 
-### Создаем healhchecker
+### Создаем на нодах healhchecker (потому что иногда bingo болеет)
 
 Действия выполняются на обеих нодах.
 ```
@@ -344,6 +346,30 @@ done
 
 Используем файл `/etc/systemd/system/checker.service`
 
+```
+[Unit]
+Description=healthchecker
+After=multi-user.target
+
+[Service]
+Type=simple
+User=dim
+Restart=always
+RestartSec=5
+WorkingDirectory=/home/dim
+ExecStart=/bin/bash checker.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Запуск:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable checker.service
+sudo systemctl start checker.service
+```
 
 # HTTP3
 
@@ -404,8 +430,63 @@ systemctl start grafana-server
 - на балансере оставляем порты 22, 80, 443, 3000;
 - для подключения по ssh используем ключи.
 
-Порты закроем с помощью ufw. Пример ufw status на балансере:
+Порты закроем с помощью ufw
 
+### Балансер
+
+```bash
+dim@balancer:~$ sudo ufw status verbose
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22                         ALLOW IN    Anywhere
+80/tcp                     ALLOW IN    Anywhere
+443/tcp                    ALLOW IN    Anywhere
+3000/tcp                   ALLOW IN    Anywhere
+443/udp                    ALLOW IN    Anywhere
+22 (v6)                    ALLOW IN    Anywhere (v6)
+80/tcp (v6)                ALLOW IN    Anywhere (v6)
+443/tcp (v6)               ALLOW IN    Anywhere (v6)
+3000/tcp (v6)              ALLOW IN    Anywhere (v6)
+443/udp (v6)               ALLOW IN    Anywhere (v6)
+```
+
+### Нода 1
+
+```bash
+dim@master:~$ sudo ufw status verbose
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), deny (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+80                         ALLOW IN    192.168.10.0/24
+5432                       ALLOW IN    192.168.10.0/24
+22/tcp (v6)                ALLOW IN    Anywhere (v6)
+```
+
+### Нода 2
+
+```bash
+dim@slave:~$ sudo ufw status verbose
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+80                         ALLOW IN    192.168.10.0/24
+22/tcp (v6)                ALLOW IN    Anywhere (v6)
+```
 
 # Итог
 
