@@ -112,6 +112,7 @@
 `listen_addresses = '192.168.10.4'`
 
 - В файл pg_hba.conf в раздел  `# IPv4 local connections:` добавим строку
+  
 `host    all             all             192.168.10.0/24         trust`
 
 Для первого этапа всё, но...
